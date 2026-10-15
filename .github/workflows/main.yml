@@ -1,38 +1,50 @@
-name: Build EXE for Windows
+name: Build Jieqi-Moonlink v1.01 Auto-Run
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Windows Executable
     runs-on: windows-latest
 
     steps:
-    - name: Checkout code
+    # Tự động tải đúng bản v1.01 từ kho gốc của tác giả (không lo bị lỗi do nhánh code của bạn)
+    - name: Download Original Source v1.01
       uses: actions/checkout@v4
+      with:
+        repository: lxsgx23/Jieqi-Moonlink
+        ref: v1.01
 
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
+    # Cài đặt toàn bộ thư viện cần thiết (đã thêm đủ pygame và các thư viện liên quan)
+    - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        
-        # Cài đặt công cụ đóng gói file .exe
         pip install pyinstaller
-        
-        # CÀI ĐẶT TOÀN BỘ THƯ VIỆN CẦN THIẾT (đã bao gồm pygame bị thiếu ở ảnh của bạn)
         pip install pygame ultralytics opencv-python pyautogui keyboard mss PyQt5 Pillow numpy requests pydirectinput pypiwin32 psutil
-        
-    - name: Build with Pyinstaller
+
+    # Đóng gói thành file exe ẩn cửa sổ đen
+    - name: Build EXE
       run: |
         pyinstaller --onefile --windowed main.py
 
-    - name: Upload EXE
+    # Tự động dọn dẹp và gom exe đặt cạnh các file data của tác giả
+    - name: Clean up and Prepare Files
+      run: |
+        Move-Item -Path "dist\main.exe" -Destination ".\main.exe" -Force
+        Remove-Item -Path "build" -Recurse -Force
+        Remove-Item -Path "dist" -Recurse -Force
+        Remove-Item -Path "*.spec" -Force
+        Remove-Item -Path ".git" -Recurse -Force
+        Remove-Item -Path ".github" -Recurse -Force -ErrorAction SilentlyContinue
+
+    # Đóng gói toàn bộ thành 1 file Zip cho bạn tải về
+    - name: Upload Final Package
       uses: actions/upload-artifact@v4
       with:
-        name: Jieqi-Moonlink-Release
-        path: dist/main.exe
+        name: Jieqi-Moonlink-v1.01-ReadyToRun
+        path: ./*
