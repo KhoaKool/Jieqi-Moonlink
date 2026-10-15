@@ -20,8 +20,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        
+        # Cài đặt công cụ đóng gói file .exe
         pip install pyinstaller
-        pip install ultralytics opencv-python pyautogui keyboard mss PyQt5 Pillow numpy
+        
+        # CÀI ĐẶT TOÀN BỘ THƯ VIỆN CẦN THIẾT (đã bao gồm pygame bị thiếu ở ảnh của bạn)
+        pip install pygame ultralytics opencv-python pyautogui keyboard mss PyQt5 Pillow numpy requests pydirectinput pypiwin32 psutil
         
     - name: Build with Pyinstaller
       run: |
