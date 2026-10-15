@@ -1,4 +1,4 @@
-name: Build Jieqi-Moonlink v1.01 Auto-Run
+name: 1-Click Bot Builder (Cho Người Lười)
 
 on:
   workflow_dispatch:
@@ -6,10 +6,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-    # Tự động tải đúng bản v1.01 từ kho gốc của tác giả (không lo bị lỗi do nhánh code của bạn)
-    - name: Download Original Source v1.01
+    - name: Clone Code Bản Chuẩn v1.01
       uses: actions/checkout@v4
       with:
         repository: lxsgx23/Jieqi-Moonlink
@@ -20,31 +18,30 @@ jobs:
       with:
         python-version: '3.10'
 
-    # Cài đặt toàn bộ thư viện cần thiết (đã thêm đủ pygame và các thư viện liên quan)
-    - name: Install Dependencies
+    - name: Cài đặt tất tần tật thư viện (Bao gồm cả pygame)
       run: |
         python -m pip install --upgrade pip
-        pip install pyinstaller
-        pip install pygame ultralytics opencv-python pyautogui keyboard mss PyQt5 Pillow numpy requests pydirectinput pypiwin32 psutil
+        pip install pyinstaller pygame ultralytics opencv-python pyautogui keyboard mss PyQt5 Pillow numpy requests pydirectinput pypiwin32 psutil
 
-    # Đóng gói thành file exe ẩn cửa sổ đen
-    - name: Build EXE
+    - name: Phép Thuật Hợp Nhất (Gom Data vào 1 file EXE)
       run: |
-        pyinstaller --onefile --windowed main.py
+        # 1. Chèn mã để Tool tự tìm thấy Data khi bị nén vào 1 file
+        $patch = "import os, sys`nif hasattr(sys, '_MEIPASS'):`n    os.chdir(sys._MEIPASS)`n"
+        $original = Get-Content main.py -Raw
+        Set-Content main.py -Value ($patch + $original)
 
-    # Tự động dọn dẹp và gom exe đặt cạnh các file data của tác giả
-    - name: Clean up and Prepare Files
-      run: |
-        Move-Item -Path "dist\main.exe" -Destination ".\main.exe" -Force
-        Remove-Item -Path "build" -Recurse -Force
-        Remove-Item -Path "dist" -Recurse -Force
-        Remove-Item -Path "*.spec" -Force
-        Remove-Item -Path ".git" -Recurse -Force
-        Remove-Item -Path ".github" -Recurse -Force -ErrorAction SilentlyContinue
+        # 2. Quét toàn bộ kho của tác giả và nhồi chung vào EXE
+        $items = Get-ChildItem -Exclude ".git", ".github", "main.py", "build", "dist"
+        $cmd = "pyinstaller --onefile --windowed --name `"AutoBot_Jieqi`" "
+        foreach ($item in $items) {
+            $cmd += "--add-data `"$($item.Name);$($item.Name)`" "
+        }
+        $cmd += "main.py"
+        
+        Invoke-Expression $cmd
 
-    # Đóng gói toàn bộ thành 1 file Zip cho bạn tải về
-    - name: Upload Final Package
+    - name: Trả hàng cho sếp
       uses: actions/upload-artifact@v4
       with:
-        name: Jieqi-Moonlink-v1.01-ReadyToRun
-        path: ./*
+        name: AutoBot_Jieqi_1Click
+        path: dist/AutoBot_Jieqi.exe
